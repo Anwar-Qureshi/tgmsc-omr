@@ -1,87 +1,153 @@
 # TGMSC OMR Evaluator
 
-A small website built to help faculty at Telangana Minorities Study Circle check mock-test OMR answer sheets using a phone or computer.
+### From an internship observation to a working faculty tool.
 
-Faculty currently compare each sheet with an answer key and count the results manually. This app reads supported sheets, highlights answers that need checking, and calculates the score after faculty review.
+A browser-based application that helps faculty check mock-test OMR sheets from a photograph, review the detected answers and calculate the final score.
 
-## How to use it
+**[Open the live app](https://tgmsc-omr.pages.dev/) · [View the source](https://github.com/Anwar-Qureshi/tgmsc-omr)**
 
-1. Enter an exam name and choose the number of questions.
-2. Enter marks for a correct answer and the deduction for a wrong answer. Fractions such as `2/3` are accepted. Use the actual rules for that exam.
-3. Type or paste the answer key using only A, B, C and D in question order. Spaces, commas and line breaks are allowed. Check the numbered preview before continuing.
-4. Take or upload a clear, upright photo of the whole sheet. Keep the paper flat and all four printed corner marks visible.
-5. Check that the green circles line up with the printed bubbles. Review the readings and resolve any uncertain answers.
-6. Confirm the result and copy it onto the paper. Select **Next student** to evaluate another sheet with the same key.
+Built by **Mohammed Anwar Qureshi** during his internship at **Telangana Minorities Study Circle, Hyderabad**.
 
-Image answer keys are not supported. The faculty must type or paste the key.
+---
 
-## Supported sheets
+## The problem I noticed
 
-| Sheet | Current support |
+TGMSC conducts mock tests for UPSC, Groups and SI students twice a week. After each test, faculty compare the filled OMR sheets with a common answer key, count correct, wrong and unanswered questions, and calculate marks with negative marking.
+
+A shared scanner was available, but depending on one device would limit how faculty could use a digital solution. I focused the project on a simpler workflow: **open a website on a phone, photograph a sheet and review its evaluation.**
+
+## What I built
+
+TGMSC OMR Evaluator brings photo reading, answer review and score calculation into one lightweight website.
+
+| Faculty need | What the app provides |
 | --- | --- |
-| 100 questions | Automatic reading for the supplied TGMSC layout, with faculty review |
-| 50 questions | Automatic reading for a reconstructed reference layout; validation on fresh real sheets is still needed |
-| 30 questions | Faculty enters the student responses manually; the app calculates the result |
+| Evaluate a stack of papers using the same key | Set up the exam once, then move to the next student |
+| Use an Android phone | Take a photo or choose an existing image |
+| Work with different marking rules | Enter correct-answer marks and a wrong-answer deduction, including fractions such as `2/3` |
+| Check what the software detected | View green circles over the bubbles and inspect answer crops |
+| Resolve faint or unclear marks | Review uncertain answers before confirming a result |
+| Copy totals onto the original paper | See attempted, correct, wrong and unanswered counts, marks deducted and final score |
+| Avoid maintaining student records | Process one sheet at a time without student names, roll numbers or a database |
 
-Question count alone does not make an unfamiliar layout compatible. Automatic reading for the actual 30-question form has not been added yet.
+**Faculty review is part of the workflow.** The app supports the decision; the faculty member confirms the result.
 
-## Results
+## The workflow
 
-The app shows attempted, correct, wrong and unanswered counts, marks deducted and the final score.
+1. **Set up the exam.** Choose the question count and enter its marking rules.
+2. **Check the answer key.** Type or paste A–D answers in question order and verify the numbered preview.
+3. **Add a sheet.** Take or upload a clear photograph with the whole form visible.
+4. **Review the reading.** Check that the green circles line up with the printed bubbles, inspect answers and resolve uncertain marks.
+5. **Confirm and continue.** Copy the result onto the paper, then select **Next student** to keep using the same exam and key.
 
-**Score = correct answers × marks per correct answer − wrong answers × deduction.**
+Answer-key images are not imported. The key must be typed or pasted as letters; spaces, commas and line breaks are accepted.
 
-Unanswered questions receive zero. An uncertain response must be resolved before confirmation. Faculty should select Invalid only when the exam's rules treat that response as wrong. Scores are displayed to two decimal places.
+## Supported forms
 
-## Navigation and privacy
+| Form | Available today |
+| --- | --- |
+| **100 questions** | Automatic photo reading for the supplied TGMSC layout, followed by faculty review |
+| **50 questions** | Trial photo reader based on a layout recreated from a marked reference sheet; fresh real-paper validation remains pending |
+| **30 questions** | Manual entry of student responses from the photo, with automatic score calculation |
 
-- Opening or reloading the app starts with an empty exam setup.
-- **New exam / Home** clears the current exam after confirmation.
-- **Edit current exam** keeps its fields so faculty can change them.
-- **Next student** clears the previous sheet and result while keeping the current exam and key.
-- Exam settings, photos and scores remain only in the open tab. There is no student history, student name field or roll number field.
-- The evaluator processes photos on the user's device; it does not send them to a grading server.
+The layout matters as well as the question count. A different 50- or 100-question form is not automatically compatible.
 
-Copy a result before moving on. Reloading or closing the tab loses the current exam and result.
+## How a photograph becomes a score
 
-## How it works
+The reader uses **classical computer vision**: it finds the printed corner marks, adjusts for the photograph's perspective, and checks how dark each answer bubble is. A position map tells it where to look for each question's A–D choices.
 
-The app uses image processing rather than a trained AI model. It looks for printed corner marks to align the photograph with a map of bubble positions, then compares darkness inside the bubbles. It compares the detected responses with the faculty's key and calculates the score.
+It then compares the responses with the faculty's answer key. Unclear readings are flagged for review, and unsuitable images can be rejected. Manual corner selection is available when automatic alignment fails.
 
-Blur, shadows, glare, folds and unusual camera angles can affect readings. Retake the photo if alignment is poor. Manual alignment is available for supported sheets: select the four printed corner marks clockwise from the top left.
+```text
+Final score = (correct answers × marks awarded) − (wrong answers × deduction)
+```
 
-## Testing and current status
+Unanswered questions score zero. Faculty can classify an invalid response as wrong when the exam rules require it. Scores are displayed to two decimal places.
 
-This is a supervised faculty pilot. The earlier recognition checks passed 31 controlled photo cases across the 50- and 100-question layouts, with no silent mismatches among accepted automatic readings. Uncertain readings were flagged, and unsuitable cases were blocked. Those results come from controlled reference-based test images, not an independent collection of real faculty photographs.
+This approach runs directly in the browser, without a trained model, paid AI API or grading server. Photo quality still matters: blur, glare, shadows, folds and severe camera angles can affect the reading.
 
-The latest navigation update was checked for clean startup, editing, starting a new exam, cancelling a reset, keeping the key for the next student, and returning through browser history. Recognition and scoring files were unchanged in that update.
+## Engineering work and decisions
 
-Physical Android camera testing, repeated use on lower-memory phones and independent real-paper accuracy checks remain pending. The project does not claim guaranteed accuracy, zero bugs or readiness for unattended grading. Faculty must check each result.
+My work covered identifying the faculty workflow, defining the phone-based interaction, and developing and refining the application with AI-assisted development.
 
-## Files and deployment
+The implementation includes:
 
-Keep these nine files together at the top level of the repository:
+- **Image alignment and bubble reading:** separate position maps for the supported 100- and 50-question layouts.
+- **A review step before scoring:** uncertain responses prevent result confirmation until the faculty resolves them.
+- **Configurable scoring:** exam-specific marks and negative marking, with input validation.
+- **Responsive presentation:** readable controls and answer review on narrow screens.
+- **Deliberate session behavior:** fresh setup on opening or reloading, separate actions for editing and starting a new exam, and the same key retained for the next student.
+- **A lightweight deployment:** plain HTML, CSS and JavaScript hosted on Cloudflare Pages.
 
-- `index.html`
-- `style.css`
-- `app.mjs`
-- `reader.mjs`
-- `validation.mjs`
-- `template-100.mjs`
-- `template-50.mjs`
-- `favicon.svg`
-- `favicon-32.png`
+The project is designed to reduce repeated counting and arithmetic. Time saved in day-to-day faculty use has not yet been measured.
 
-The website needs no database, model download, paid AI service or environment variables. Publish these files using an HTTPS static website host, such as Cloudflare Pages or GitHub Pages. The README is documentation and is not needed to run the app. Upload the extracted files, not the deployment ZIP.
+## Validation and current status
 
-For Cloudflare Pages, connect the GitHub repository, choose `main`, select no framework, leave the build command empty and publish the repository root (`.`).
+**Live, supervised pilot.** Deployment makes the application accessible; broader field validation is still in progress.
 
-For GitHub Pages, choose **Settings → Pages → Deploy from a branch → main → /(root)**.
+Controlled photo checks covered **31 cases** across the two automatic readers, including blank, partially answered, fully correct, fully wrong and mixed sheets, along with difficult image conditions.
 
-To run locally, use a local web server, for example `python3 -m http.server 8000`, and open `http://localhost:8000`. Opening `index.html` directly from a folder may prevent its JavaScript modules from loading.
+| Controlled dataset | Cases | Accepted for review | Blocked | Automatic readings | Answers flagged | Silent mismatches in automatic readings |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 100-question sheets | 16 | 10 | 6 | 908 | 92 | 0 |
+| 50-question sheets | 15 | 9 | 6 | 447 | 3 | 0 |
 
-## Project purpose
+These are reference-based sandbox results, not a measured field-accuracy rate. Scores after resolving flagged answers against the known test responses matched expectations. Separate checks covered scoring, input validation and navigation behavior. Test datasets and reports are maintained outside this deployment repository.
 
-The project aims to reduce manual counting and score calculation while keeping faculty in control of the final result. Actual time saved and field accuracy must be measured during a real faculty pilot.
+**Next validation steps:** physical Android camera behavior, repeated grading on lower-memory phones and independent photographs of actual completed papers. Automatic support for the real 30-question form also remains future work.
 
-Do not commit student photographs, real exam answer keys, credentials or other private information to this repository.
+## Privacy and session behavior
+
+The evaluator processes photos on the user's device and does not upload them to a grading service. It does not maintain a student database or result history.
+
+- **Next student** clears the previous sheet and result, keeping the exam and key.
+- **Edit current exam** returns to the existing settings for editing.
+- **Home / New exam** clears the exam after confirmation.
+- **Reloading or closing the tab** clears the current work.
+
+Copy each confirmed score before continuing. Keep student photographs and real exam keys out of the repository.
+
+## Technology and source files
+
+**HTML · CSS · JavaScript ES modules · Canvas API · Cloudflare Pages**
+
+| File | Responsibility |
+| --- | --- |
+| `index.html` | Page structure and faculty instructions |
+| `style.css` | Layout, typography and responsive styles |
+| `app.mjs` | Exam setup, photo handling, review and navigation |
+| `reader.mjs` | Corner detection, image alignment, bubble reading and scoring |
+| `validation.mjs` | Validation of marking values |
+| `template-100.mjs` | Bubble positions for the 100-question reference |
+| `template-50.mjs` | Bubble positions for the reconstructed 50-question reference |
+| `favicon.svg`, `favicon-32.png` | Website icons |
+
+## Run locally
+
+Download or clone the repository, open a terminal in its folder, and run:
+
+```sh
+python3 -m http.server 8000
+```
+
+On Windows, `py -m http.server 8000` is another option. Open **http://localhost:8000** in your browser.
+
+Python is used only to serve the files locally. The hosted application needs no package installation, database, environment variables or model files. Serve it over HTTP or HTTPS; opening `index.html` directly from a folder may block its JavaScript modules.
+
+## Deployment
+
+The live application is hosted on **Cloudflare Pages**. To deploy a copy, connect the repository and use:
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Framework preset | None |
+| Build command | `exit 0` |
+| Build output directory | `.` |
+
+Keep all runtime files together at the repository root. Changes pushed to the connected production branch trigger a new deployment.
+
+---
+
+**Mohammed Anwar Qureshi** · B.E. Artificial Intelligence & Data Science, 2027  
+[GitHub](https://github.com/Anwar-Qureshi)
