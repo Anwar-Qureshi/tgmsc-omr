@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TGMSC OMR Evaluator</title>
+  <meta name="description" content="Review and score TGMSC mock-test OMR sheets on your device.">
+  <meta name="theme-color" content="#174f42">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <span class="wordmark">TGMSC</span>
+      <span class="masthead-label">Faculty tools</span>
+      <span class="pilot-label">Trial version</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-intro">
+      <h1>OMR Evaluator</h1>
+      <p>Check a student’s OMR sheet, review the answers and calculate the score.</p>
+    </div>
+
+    <section id="setup" class="panel" aria-labelledby="setupTitle">
+      <div class="panel-head">
+        <h2 id="setupTitle">Set up an exam</h2>
+        <p>Choose the question count, enter the marks and check your answer key.</p>
+      </div>
+      <form autocomplete="off" id="exam" class="panel-body">
+        <div class="fields">
+          <label>Exam name<input id="title" required maxlength="100" placeholder="e.g. Prelims mock · November"></label>
+          <label>Number of questions
+            <select id="layout">
+              <option value="100">100 questions · Photo reading</option>
+              <option value="50">50 questions · Photo reading — trial</option>
+              <option value="30">30 questions · Enter answers yourself</option>
+            </select>
+          </label>
+          <label>Marks for each correct answer<input id="plus" required inputmode="decimal" placeholder="e.g. 2"></label>
+          <label>Marks deducted for each wrong answer<input id="minus" required inputmode="text" placeholder="e.g. 2/3"></label>
+        </div>
+        <p class="hint setup-note">Use this exam’s marking rules. Enter the deduction as a positive number, such as 0.5 or 2/3. Enter 0 if there is no negative marking.</p>
+        <label>Correct answers, from question 1 onwards
+          <textarea id="key" required rows="4" placeholder="A B C D …" aria-describedby="keyHint"></textarea>
+        </label>
+        <p id="keyHint" class="hint">Type or paste exactly 100 answers using A, B, C or D. Separate them with spaces, commas or new lines. Leave out question numbers. Answer-key photos cannot be read.</p>
+        <p id="formHint" class="hint setup-note"></p>
+        <div class="action-line"><button>Check answer key</button></div>
+      </form>
+      <div id="preview" class="panel-body divided" hidden>
+        <h3>Check the answer key</h3>
+        <p class="hint">Check each question number and answer against the official key. If anything is wrong, change the answers above and check again.</p>
+        <div id="keygrid"></div>
+        <button id="start">Use this key and start</button>
+      </div>
+    </section>
+
+    <section id="work" class="panel" hidden>
+      <div class="panel-head heading">
+        <div class="exam-heading"><h2 id="active"></h2><p id="rules" class="hint"></p></div>
+        <div class="exam-actions"><button class="secondary" id="editexam" type="button">Edit current exam</button><button class="secondary" id="newexam" type="button">Home / New exam</button></div>
+      </div>
+      <div class="panel-body">
+        <h3>Add a student’s answer sheet</h3>
+        <div class="pair capture-actions">
+          <label class="file phone-camera">Take photo<input id="camera" type="file" accept="image/*" capture="environment" aria-label="Take photo"></label>
+          <label class="file secondary">Upload photo<input id="gallery" type="file" accept="image/*" aria-label="Upload photo"></label>
+        </div>
+        <p class="hint desktop-photo-note">Using a computer? Choose a saved photo. To take a photo, open this website on your phone.</p>
+        <p class="hint">Lay the sheet flat and keep its heading at the top of the photo. Include the whole sheet and all four printed corner marks. Take a clear photo in even light, before adding correction marks.</p>
+        <p class="hint setup-note">For supported 50- and 100-question sheets, reading starts after you choose a photo.</p>
+        <div id="photo" class="divided" hidden>
+          <p id="guide" class="hint" aria-live="polite"></p>
+          <canvas id="sheet" aria-label="Sheet photo and answer grid"></canvas>
+          <div class="pair sheet-actions">
+            <button id="manual" type="button" class="secondary">Set corner marks</button>
+            <button id="overlay" type="button" class="secondary" aria-pressed="true" hidden>Hide green circles</button>
+            <button id="reviewLink" type="button" hidden>Review answers</button>
+          </div>
+          <div class="pair" id="align">
+            <button class="secondary" id="undo">Undo last point</button><button id="read" disabled>Read answers</button>
+          </div>
+        </div>
+        <div id="review" class="divided" hidden tabindex="-1">
+          <h3>Review answers</h3>
+          <p id="pending" role="status"></p>
+          <p class="hint setup-note">For each question, select the answer the student marked. Select No answer if it is blank. Use All questions to check every answer before confirming.</p>
+          <div class="pair review-nav">
+            <button id="backPhoto" type="button" class="secondary">View sheet</button>
+            <button id="goConfirm" type="button" hidden>Check final score</button>
+          </div>
+          <label class="filter-label">Show
+            <select id="filter">
+              <option value="pending">Needs checking</option>
+              <option value="all">All questions</option>
+              <option value="wrong">Marked wrong</option>
+            </select>
+          </label>
+          <div id="rows"></div>
+          <div id="confirmArea" tabindex="-1">
+            <p id="provisional" aria-live="polite"></p>
+            <label class="check"><input type="checkbox" id="verified">I checked the answers against the student’s sheet.</label>
+            <button id="finish" disabled>Confirm result</button>
+          </div>
+        </div>
+        <div id="result" class="divided" hidden>
+          <h3>Confirmed result</h3>
+          <p class="hint">Write these totals on the paper before choosing Next student. The previous result will then be cleared. Scores are shown to two decimal places.</p>
+          <div id="totals"></div>
+          <div class="pair"><button id="editResult" type="button" class="secondary">Review again</button><button id="next" type="button">Next student</button></div>
+        </div>
+      </div>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+    <details class="help"><summary>Help &amp; privacy</summary>
+      <p><strong>Camera not opening?</strong> Take a photo with your phone’s Camera app, then choose Upload photo.</p><p><strong>Green circles in the wrong place?</strong> Retake the photo with the phone directly above the flat sheet. If needed, choose Set corner marks and tap the four small printed marks around the form. Do not tap the answer bubbles.</p><p><strong>More than one option marked?</strong> Check the exam’s rules. Choose Invalid / count as wrong only when those rules require a deduction.</p>
+      <p><strong>Which sheets work?</strong> Photo reading supports the supplied TGMSC 100-question layout. The 50-question layout was recreated from a marked sheet and still needs checking on fresh papers. For 30 questions, enter every student answer yourself. Other layouts may not match, even if the question count is the same. Always review the answers.</p>
+      <p><strong>What is saved?</strong> The evaluator reads photos on this device. It does not upload them or keep a student record. Reloading or closing this tab clears the exam, photo and result. Edit current exam keeps the key for editing; Home / New exam clears it after you confirm.</p>
+    </details>
+    <noscript><p>This evaluator needs JavaScript enabled in your browser.</p></noscript>
+    <footer>Copy each result before moving on. Reloading or closing this tab clears your work.</footer>
+  </main>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
