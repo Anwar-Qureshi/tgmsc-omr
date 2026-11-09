@@ -3,12 +3,15 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {findAnchors,readSheet,score} from '../../dist/reader.mjs';
+import {shouldSkipBenchmark} from '../benchmark-fixtures.mjs';
 
 const {key,cases}=JSON.parse(fs.readFileSync(new URL('./cases.json',import.meta.url)));
+const fixturesDir = new URL('./fixtures/',import.meta.url);
+if(shouldSkipBenchmark(cases,fixturesDir,'50-question')) process.exit(0);
 let accepted=0, rejected=0, total=0, reviewed=0;
 const python = process.platform === 'win32' ? 'python' : 'python3';
 for(const c of cases){
- const path=fileURLToPath(new URL('./fixtures/'+c.file,import.meta.url));
+ const path=fileURLToPath(new URL(c.file,fixturesDir));
  const data=execFileSync(python,['-c','from PIL import Image; import sys; sys.stdout.buffer.write(Image.open(sys.argv[1]).convert("RGBA").tobytes())',path],{maxBuffer:20*1024*1024});
  const frame={data,width:1200,height:1600};
  assert.equal(data.length,frame.width*frame.height*4);

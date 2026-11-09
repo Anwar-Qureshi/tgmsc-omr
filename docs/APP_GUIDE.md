@@ -6,7 +6,7 @@ TGMSC faculty grade one student's OMR sheet at a time using a common exam key. T
 
 ## Source of truth and build
 
-The hand-authored HTML, CSS and ES modules in `dist` are both source and deployment assets. This deliberate buildless structure avoids dependency/build complexity. `scripts/build-standalone.mjs` concatenates local modules, removes module import/export declarations, embeds CSS and the SVG icon, and writes an ignored standalone HTML artifact. Update that script if module structure changes: it is a small purpose-specific bundler, not a general JavaScript parser. Node's built-in test runner executes pure logic. Python/Pillow is test-only image decoding.
+The hand-authored HTML, CSS and ES modules in `dist` are both source and deployment assets. This deliberate buildless structure avoids dependency/build complexity. `scripts/build-standalone.mjs` concatenates local modules, removes module import/export declarations, embeds CSS and the SVG icon, and writes an ignored standalone HTML artifact. Update that script if module structure changes: it is a small purpose-specific bundler, not a general JavaScript parser. Node's built-in test runner executes pure logic. Python/Pillow is test-only image decoding. Sandbox benchmark scripts now preflight fixture PNG availability and skip with a warning if those fixture files are not present in the checkout.
 
 ## Exam data and validation
 
