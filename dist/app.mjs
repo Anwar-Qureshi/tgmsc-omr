@@ -273,3 +273,4 @@ $('forget').onclick=()=>{
  catch{status('Browser storage is unavailable. You can clear site data in your browser settings.');}
 };
 updateFormHelp();
+// Fixed some issues

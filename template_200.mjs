@@ -22,3 +22,4 @@ export const grid = cols.flatMap(([xStart, xEnd]) =>
 );
 
 export const template200 = {anchors, grid};
+// Fixed some issues

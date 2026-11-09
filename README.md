@@ -1,6 +1,6 @@
 # TGMSC OMR Evaluator
 
-### From an internship observation to a working faculty tool.
+### From an internship observation to a working faculty tool. 
 
 A browser-based application that helps faculty check mock-test OMR sheets from a photograph, review the detected answers and calculate the final score.
 
@@ -148,5 +148,5 @@ The live application is hosted on **Cloudflare Pages**. To deploy a copy, connec
 
 Keep all runtime files together at the repository root. Changes pushed to the connected production branch trigger a new deployment.
 
-**Mohammed Anwar Qureshi** · B.E. Artificial Intelligence & Data Science, 2027  
+**Mohammed Anwar Qureshi** · B.E. in Artificial Intelligence & Data Science, 2027  
 [GitHub](https://github.com/Anwar-Qureshi)

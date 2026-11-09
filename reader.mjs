@@ -364,3 +364,4 @@ function validAnchorGeometry(points,width,height){
   return (u-x)*(t-v)-(v-y)*(s-u)>width*height*.12;
  });
 }
+// Fixed some issues
