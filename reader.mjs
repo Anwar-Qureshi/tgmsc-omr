@@ -21,6 +21,97 @@ export function projection(from,to){
  return ([x,y])=>[(a0*x+b*y+c)/(g*x+h*y+1),(d*x+e*y+f)/(g*x+h*y+1)];
 }
 const directions=Array.from({length:8},(_,i)=>[Math.cos(i*Math.PI/4),Math.sin(i*Math.PI/4)]);
+const cardinal=[[1,0],[-1,0],[0,1],[0,-1]];
+
+function bubbleRingScore(graySafe,map,x,y,iso=true){
+ if(!iso){
+  const c0=graySafe(map([x,y]));
+  if(c0<0) return -50;
+  const c1=graySafe(map([x+2.5,y])), c2=graySafe(map([x-2.5,y])), c3=graySafe(map([x,y+2.5])), c4=graySafe(map([x,y-2.5]));
+  if(c1<0||c2<0||c3<0||c4<0) return -50;
+  const cMin=Math.min(c0,c1,c2,c3,c4);
+  let sum=0;
+  for(const [ux,uy] of cardinal){
+   const r6=graySafe(map([x+6*ux,y+6*uy])), r7=graySafe(map([x+7*ux,y+7*uy])), r8=graySafe(map([x+8*ux,y+8*uy])), r9=graySafe(map([x+9*ux,y+9*uy])), r12=graySafe(map([x+12*ux,y+12*uy]));
+   if(r6<0||r7<0||r8<0||r9<0||r12<0) return -50;
+   const ringMin=Math.min(r7,r8,r6+1.5,r9+1.5);
+   const hollow=Math.min(cMin-ringMin,r12-ringMin);
+   sum+=Math.max(0,hollow);
+  }
+  return Math.min(sum*0.25,65);
+ }
+ const [mx,my]=map([x,y]);
+ const ix=Math.round(mx), iy=Math.round(my);
+ const c0=graySafe([ix,iy]);
+ if(c0<0) return -50;
+ const [mx1,my1]=map([x+1,y]);
+ const step=Math.hypot(mx1-mx,my1-my);
+ const c1=graySafe([mx+2.5*step,iy]), c2=graySafe([mx-2.5*step,iy]), c3=graySafe([ix,my+2.5*step]), c4=graySafe([ix,my-2.5*step]);
+ if(c1<0||c2<0||c3<0||c4<0) return -50;
+ const cMin=Math.min(c0,c1,c2,c3,c4);
+ let sum=0;
+ for(const [ux,uy] of cardinal){
+  const r6=graySafe([mx+6*step*ux,my+6*step*uy]), r7=graySafe([mx+7*step*ux,my+7*step*uy]), r8=graySafe([mx+8*step*ux,my+8*step*uy]), r9=graySafe([mx+9*step*ux,my+9*step*uy]), r12=graySafe([mx+12*step*ux,my+12*step*uy]);
+  if(r6<0||r7<0||r8<0||r9<0||r12<0) return -50;
+  const ringMin=Math.min(r6,r7,r8,r9);
+  const hollow=Math.min(cMin-ringMin,r12-ringMin);
+  const edge=r12-ringMin;
+  sum+=Math.max(0,hollow)+0.35*Math.max(0,edge);
+ }
+ return Math.min(sum*0.25,65);
+}
+
+function snapGrid200(graySafe,map,baseGrid){
+ const snapped=Array(200);
+ const centers=[4.5,14.5,24.5,34.5,44.5];
+ for(let c=0;c<4;c++){
+  const blockShifts=[];
+  for(let b=0;b<5;b++){
+   const rStart=b*10;
+   let bxBest=0,byBest=0,bSc=-1e9;
+   for(const dyC of [0,-2,2,-4,4]){
+    for(const dxC of [0,-2,2,-4,4,-6,6]){
+     let sc=-0.05*(dxC*dxC+dyC*dyC);
+     for(let r=rStart;r<rStart+10;r++){
+      const row=baseGrid[c*50+r];
+      for(let o=0;o<5;o++) sc+=bubbleRingScore(graySafe,map,row[o][0]+dxC,row[o][1]+dyC,false);
+     }
+     if(sc>bSc){bSc=sc;bxBest=dxC;byBest=dyC;}
+    }
+   }
+   for(const dyF of [0,-1,1]){
+    for(const dxF of [0,-1,1]){
+     const candX=bxBest+dxF, candY=byBest+dyF;
+     let sc=-0.05*(candX*candX+candY*candY);
+     for(let r=rStart;r<rStart+10;r++){
+      const row=baseGrid[c*50+r];
+      for(let o=0;o<5;o++) sc+=bubbleRingScore(graySafe,map,row[o][0]+candX,row[o][1]+candY,false);
+     }
+     if(sc>bSc){bSc=sc;bxBest=candX;byBest=candY;}
+    }
+   }
+   blockShifts.push([bxBest,byBest]);
+  }
+  for(let r=0;r<50;r++){
+   let idx=0;
+   while(idx<3&&r>centers[idx+1]) idx++;
+   const t=Math.max(0,Math.min(1,(r-centers[idx])/(centers[idx+1]-centers[idx])));
+   const dxInterp=blockShifts[idx][0]+t*(blockShifts[idx+1][0]-blockShifts[idx][0]);
+   const dyInterp=blockShifts[idx][1]+t*(blockShifts[idx+1][1]-blockShifts[idx][1]);
+   const q=c*50+r, row=baseGrid[q];
+   let rxBest=dxInterp,ryBest=dyInterp,rSc=-1e9;
+   for(const dyR of [0,-0.75,0.75,-1.5,1.5]){
+    for(const dxR of [0,-0.75,0.75,-1.5,1.5]){
+     let sc=-0.05*(dxR*dxR+dyR*dyR);
+     for(let o=0;o<5;o++) sc+=bubbleRingScore(graySafe,map,row[o][0]+dxInterp+dxR,row[o][1]+dyInterp+dyR,false);
+     if(sc>rSc){rSc=sc;rxBest=dxInterp+dxR;ryBest=dyInterp+dyR;}
+    }
+   }
+   snapped[q]=row.map(([x,y])=>[x+rxBest,y+ryBest]);
+  }
+ }
+ return snapped;
+}
 
 const templates={100:{anchors,grid},50:template50,200:template200};
 export function readSheet(frame,points,questions=100){
@@ -35,7 +126,14 @@ export function readSheet(frame,points,questions=100){
   const p=(y*width+x)*4;
   return .299*data[p]+.587*data[p+1]+.114*data[p+2];
  };
- const rows=template.grid.map(bubbles=>{
+ const graySafe=([x,y])=>{
+  x=Math.round(x);y=Math.round(y);
+  if(!Number.isFinite(x+y)||x<0||y<0||x>=width||y>=height) return -1;
+  const p=(y*width+x)*4;
+  return .299*data[p]+.587*data[p+1]+.114*data[p+2];
+ };
+ const activeGrid=questions===200?snapGrid200(graySafe,map,template.grid):template.grid;
+ const rows=activeGrid.map(bubbles=>{
   const outline=bubbles.map(([x,y])=>{
    const edges=directions.map(([u,v])=>{
     const at=r=>gray(map([x+r*u,y+r*v]));
@@ -81,11 +179,17 @@ export function score(key,answers,correctPoints,penalty){
 export function findAnchors({data,width,height},questions=100){
  const template=templates[questions];
  if(!template) return null;
+ const graySafe=([x,y])=>{
+  x=Math.round(x);y=Math.round(y);
+  if(!Number.isFinite(x+y)||x<0||y<0||x>=width||y>=height) return -1;
+  const p=(y*width+x)*4;
+  return .299*data[p]+.587*data[p+1]+.114*data[p+2];
+ };
  const pixels=new Uint8Array(width*height);
  for(let i=0,j=0;i<pixels.length;i++,j+=4){
   pixels[i]=(.299*data[j]+.587*data[j+1]+.114*data[j+2])<94?1:0;
  }
- const minSide=Math.max(3,Math.round(Math.min(width,height)*.003));
+ const minSide=Math.max(questions===200?5:3,Math.round(Math.min(width,height)*(questions===200?.0055:.003)));
  const maxSide=Math.max(10,Math.round(Math.min(width,height)*.018));
  const candidates=[];
  const queue=new Int32Array(pixels.length);
@@ -105,7 +209,13 @@ export function findAnchors({data,width,height},questions=100){
   const w=x1-x0+1,h=y1-y0+1,density=end/(w*h);
   const ratio=Math.min(w,h)/Math.max(w,h);
   if(Math.min(w,h)>=(questions===50?2:minSide)&&Math.max(w,h)<=maxSide&&ratio>=(questions===50?.14:.60)&&density>=(questions===50?.60:.67)){
-   candidates.push({point:[sx/end,sy/end],size:Math.sqrt(w*h),density,ratio});
+   const cx=sx/end, cy=sy/end;
+   if(questions===200){
+    const rad=Math.max(6,Math.round(Math.max(w,h)*.9));
+    const bgs=[[-rad,-rad],[rad,-rad],[-rad,rad],[rad,rad]].map(([dx,dy])=>graySafe([cx+dx,cy+dy])).sort((a,b)=>a-b);
+    if(bgs[1]<130) continue;
+   }
+   candidates.push({point:[cx,cy],size:Math.sqrt(w*h),density,ratio});
   }
  }
  if(questions===200){
@@ -121,37 +231,96 @@ export function findAnchors({data,width,height},questions=100){
    pairs.push({bl:bl.point,br:br.point,dist,score});
   }
   pairs.sort((a,b)=>b.score-a.score);
-  let bestResult=null;
-  for(const {bl,br,dist:L} of pairs.slice(0,3)){
-   const dx=br[0]-bl[0], dy=br[1]-bl[1], ux=dx/L, uy=dy/L, nx=uy, ny=-ux;
-   const cx_b=(bl[0]+br[0])/2, cy_b=(bl[1]+br[1])/2;
-   for(const hRatio of [1.135, 1.160, 1.220, 1.112, 1.185]){
-    const H=hRatio*L;
-    for(const s of [.985, .960, 1.000]){
-     const hw=(s*L)/2;
-     for(const shear of [0, 1.0]){
-      const cur_nx=nx*shear;
-      const cx_t=cx_b+H*cur_nx, cy_t=cy_b+H*ny;
-      for(const shiftFrac of [0, .015]){
-       const shiftX=shiftFrac*L;
-       const tl=[cx_t-hw*ux+shiftX,cy_t-hw*uy], tr=[cx_t+hw*ux+shiftX,cy_t+hw*uy];
-       const points=[tl,tr,br,bl];
-       if(!validAnchorGeometry(points,width,height)) continue;
-       try{
-        const rows=readSheet({data,width,height},points,200);
-        const answered=rows.filter(r=>r.answer!=='-'&&r.answer!=='?').length;
-        const flagged=rows.filter(r=>r.answer==='?').length;
-        const quality=answered*3-flagged;
-        if(!bestResult||quality>bestResult.quality){
-         bestResult={points,quality};
-        }
-       }catch{}
+  const evalGlobal=(pts,rowsSubset,iso=true)=>{
+   if(!validAnchorGeometry(pts,width,height)) return -1e9;
+   let map;
+   try{map=projection(template.anchors,pts);}catch{return -1e9;}
+   let sum=0, minColOpt=1e9;
+   for(let c=0;c<4;c++){
+    const colScores=[0,0,0,0,0];
+    for(const r of rowsSubset){
+     const row=template.grid[c*50+r];
+     for(let o=0;o<5;o++){
+      const sc=bubbleRingScore(graySafe,map,row[o][0],row[o][1],iso);
+      if(sc<0) return -1e9;
+      colScores[o]+=sc;
+     }
+    }
+    for(let o=0;o<5;o++){
+     sum+=colScores[o];
+     if(colScores[o]<minColOpt) minColOpt=colScores[o];
+    }
+   }
+   let borderScore=0;
+   for(const xSample of [125,330,360,590,620,850,880,1065]){
+    const above=graySafe(map([xSample,296])), below=graySafe(map([xSample,326]));
+    if(above>=0&&below>=0){
+     const lineMin=Math.min(graySafe(map([xSample,306])),graySafe(map([xSample,309])),graySafe(map([xSample,312])),graySafe(map([xSample,315])));
+     const contrast=Math.min(above,below)-lineMin;
+     if(contrast>0) borderScore+=Math.min(contrast,80)*1.6;
+    }
+   }
+   return sum+5*minColOpt+borderScore;
+  };
+  const rowsFast=[0,2,15,32,49];
+  const rowsMed=[0,1,5,11,17,23,29,35,42,49];
+  let bestOverall=null;
+  const searchWith=(hList,iso)=>{
+   for(const {bl,br,dist:L} of pairs.slice(0,2)){
+    const dx=br[0]-bl[0], dy=br[1]-bl[1], ux=dx/L, uy=dy/L, nx=uy, ny=-ux;
+    const cx_b=(bl[0]+br[0])/2, cy_b=(bl[1]+br[1])/2;
+    const makePts=(hRatio,topScale,shiftU,tilt)=>{
+     const cx_t=cx_b+hRatio*L*nx+shiftU*L*ux;
+     const cy_t=cy_b+hRatio*L*ny+shiftU*L*uy;
+     const hw=0.5*topScale*L;
+     const t_ux=ux-tilt*nx, t_uy=uy-tilt*ny;
+     return [[cx_t-hw*t_ux,cy_t-hw*t_uy],[cx_t+hw*t_ux,cy_t+hw*t_uy],br,bl];
+    };
+    let bh=hList[0],bs=0.90,bu=0.015,bt=0,bestFast=-1e9;
+    for(const hRatio of hList){
+     for(const topScale of [0.84,0.86,0.88,0.90,0.92,0.94,0.96,0.98,1.00]){
+      for(const shiftU of [-0.015,-0.005,0.005,0.015,0.025,0.035]){
+       const sc=evalGlobal(makePts(hRatio,topScale,shiftU,0),rowsFast,iso);
+       if(sc>bestFast){bestFast=sc;bh=hRatio;bs=topScale;bu=shiftU;}
       }
      }
     }
+    if(bestFast<=-1e8) continue;
+    let bestSc=evalGlobal(makePts(bh,bs,bu,bt),rowsMed,iso);
+    for(const stepScale of [1,0.35]){
+     for(let pass=0;pass<2;pass++){
+      for(let i=-4;i<=4;i++){
+       const cand=bh+i*0.00625*stepScale;
+       const sc=evalGlobal(makePts(cand,bs,bu,bt),rowsMed,iso);
+       if(sc>bestSc){bestSc=sc;bh=cand;}
+      }
+      for(let i=-3;i<=3;i++){
+       const cand=bs+i*0.0066667*stepScale;
+       const sc=evalGlobal(makePts(bh,cand,bu,bt),rowsMed,iso);
+       if(sc>bestSc){bestSc=sc;bs=cand;}
+      }
+      for(let i=-3;i<=3;i++){
+       const cand=bu+i*0.004*stepScale;
+       const sc=evalGlobal(makePts(bh,bs,cand,bt),rowsMed,iso);
+       if(sc>bestSc){bestSc=sc;bu=cand;}
+      }
+      for(let i=-3;i<=3;i++){
+       const cand=bt+i*0.0083333*stepScale;
+       const sc=evalGlobal(makePts(bh,bs,bu,cand),rowsMed,iso);
+       if(sc>bestSc){bestSc=sc;bt=cand;}
+      }
+     }
+    }
+    const points=makePts(bh,bs,bu,bt);
+    try{
+     readSheet({data,width,height},points,200);
+     if(!bestOverall||bestSc>bestOverall.quality) bestOverall={points,quality:bestSc};
+    }catch{}
    }
-  }
-  return bestResult?bestResult.points:null;
+  };
+  searchWith([1.06,1.07,1.08,1.09,1.10,1.11,1.12,1.13,1.14,1.15],true);
+  if(!bestOverall) searchWith([1.18,1.20,1.22],false);
+  return bestOverall?bestOverall.points:null;
  }
  const picks=template.anchors.map(([x,y],i)=>{
   const left=i===0||i===3, top=i<2;

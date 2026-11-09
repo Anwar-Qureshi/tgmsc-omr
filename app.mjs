@@ -94,7 +94,7 @@ function draw(){
   :readings.length?'Check that the green circles sit inside the printed bubbles, then review the answers.'
   :!manual?'The four printed corner marks could not be found reliably. Retake the full sheet in even light, or align it manually.'
   :i===4?'Select Read bubbles to continue.'
-  :'Tap the small printed black mark near the '+corners[i]+' of the form ('+(i+1)+'/4). These marks sit outside the answer grid.';
+  :(exam.key.length===200&&i<2?'Tap the '+corners[i]+' corner of the printed answer-grid border box ('+(i+1)+'/4).':'Tap the small printed black mark near the '+corners[i]+' of the form ('+(i+1)+'/4). These marks sit outside the answer grid.');
 }
 async function loadPhoto(input){
  const file=input.files[0];input.value='';
