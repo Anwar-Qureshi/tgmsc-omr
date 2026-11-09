@@ -32,6 +32,6 @@ Actual Android capture, permissions/cancel behavior, camera EXIF variants, low-m
 
 ## Reproduce
 
-`npm run check` runs unit tests, both fixture benchmarks and standalone generation. Each sandbox contains the key, fixture responses and expected result CSV. Python Pillow is required for fixture decoding. For browser checks, serve dist, enter the corresponding sandbox key and scoring values, then upload the named fixtures. Never use fixture answer keys for a real exam.
+`npm run check` runs unit tests, both fixture benchmarks and standalone generation. Each sandbox contains the key, fixture responses and expected result CSV. When fixture PNGs are absent from the checkout, benchmark scripts now skip with a warning instead of failing CI. Python Pillow is required only when fixture decoding actually runs. For browser checks, serve dist, enter the corresponding sandbox key and scoring values, then upload the named fixtures. Never use fixture answer keys for a real exam.
 
 Packaging check caught a duplicate variable name when concatenating template modules for the optional standalone export. The build now isolates the 50-question template scope and validates the generated JavaScript syntax before writing the HTML. The corrected build passes. This defect affected the new export builder, not the separately loaded hosted modules.

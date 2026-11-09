@@ -8,6 +8,7 @@
 - Updated review interface dynamically to render Option E buttons, selects, and filter handling for 200-question exams while keeping 4-option displays for other layouts.
 - Calibrated bubble outline edge detection (`edges[4]`) and minimum outline threshold (`minOutlines = 3`) for dense 200-question grid geometry without regressions on 50/100 question benchmarks.
 - Updated standalone single-file HTML builder (`scripts/build-standalone.mjs`) to include template-200 with IIFE variable scope isolation and syntax verification.
+- Added fixture-presence guards for `sandbox/*/run-benchmark.mjs` so CI skips sandbox benchmark execution with an explicit warning when fixture PNGs are not present in the repository checkout.
 - Maintained strict human-in-the-loop review policy: ambiguous marks remain `?` and block confirmation until reviewed; blanks score 0.
 - Preserved existing zero-dependency buildless architecture and backward compatibility across 30, 50, and 100 question workflows.
 
