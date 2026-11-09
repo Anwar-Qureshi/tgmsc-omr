@@ -88,7 +88,7 @@ canvas { width: 100%; height: auto; display: block; }
 .row select { margin: 0; }
 .row canvas { grid-column: 1 / -1; max-width: 270px; }
 .row.quick-review { grid-template-columns: minmax(0, 1fr); }
-.answer-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.answer-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 6px; }
 .answer-buttons button { padding: 8px 4px; }
 .review-nav { margin: 10px 0; }
 .filter-label { max-width: 16rem; }
@@ -124,18 +124,3 @@ footer { border-top: 1px solid var(--line); margin-top: 19px; padding-top: 10px;
   .row { grid-template-columns: minmax(0, 1fr); }
   .row > button { width: 100%; }
 }
-
-.exam-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-@media (max-width: 550px) {
- #work .heading { flex-wrap: wrap; }
- #work .exam-heading, .exam-actions { flex-basis: 100%; }
- .exam-actions > button { flex: 1 1 125px; }
-}
-
-/* Keep guidance readable and separate from the main task. */
-.panel { box-shadow: 0 3px 14px rgb(24 50 40 / 4%); }
-#formHint:not(:empty) { padding: 10px 12px; background: var(--wash); border-left: 3px solid #879b8c; border-radius: 0 4px 4px 0; }
-#pending { font-weight: 650; margin-bottom: 8px; }
-.help strong { color: var(--ink); }
-#totals .tile:last-child { background: #e9f2ec; border-color: #a9c3b2; }
-button, .file { touch-action: manipulation; }

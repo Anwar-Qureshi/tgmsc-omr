@@ -1,0 +1,92 @@
+{
+  "key": "ABCBACCCBADADAADCDCCBCABCDCDCDDDCCDCACCBCABACDBDAAAAAABABBCADADADBBADDCDABDADADABBBBCCADCBBCDDCADABB",
+  "cases": [
+    {
+      "file": "01_blank.png",
+      "answers": "----------------------------------------------------------------------------------------------------",
+      "expect": "read"
+    },
+    {
+      "file": "02_half_answered.png",
+      "answers": "A-D-A-D-B-A-D-B-C-D-B-B-C-D-C-A-C-A-A-D-C-C-C-C-A-B-A-C-B-D-D-A-D-C-D-D-A-A-D-A-B-C-C-B-C-C-D-D-D-C-",
+      "expect": "read"
+    },
+    {
+      "file": "03_fully_correct.png",
+      "answers": "ABCBACCCBADADAADCDCCBCABCDCDCDDDCCDCACCBCABACDBDAAAAAABABBCADADADBBADDCDABDADADABBBBCCADCBBCDDCADABB",
+      "expect": "read"
+    },
+    {
+      "file": "04_fully_wrong.png",
+      "answers": "BCDCBDDDCBABABBADADDCDBCDADADAAADDADBDDCDBCBDACABBBBBBCBCCDBABABACCBAADABCABABABCCCCDDBADCCDAADBABCC",
+      "expect": "read"
+    },
+    {
+      "file": "05_mixed.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "read"
+    },
+    {
+      "file": "06_tilted.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "read"
+    },
+    {
+      "file": "07_mild_blur.png",
+      "answers": "A-D-A-D-B-A-D-B-C-D-B-B-C-D-C-A-C-A-A-D-C-C-C-C-A-B-A-C-B-D-D-A-D-C-D-D-A-A-D-A-B-C-C-B-C-C-D-D-D-C-",
+      "expect": "read"
+    },
+    {
+      "file": "08_double_and_faint.png",
+      "answers": "XBCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "read",
+      "requiredFlags": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "09_glare.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "reject"
+    },
+    {
+      "file": "10_severe_blur.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "reject"
+    },
+    {
+      "file": "11_dim.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "reject"
+    },
+    {
+      "file": "12_sideways.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "reject"
+    },
+    {
+      "file": "13_wrong_form.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "reject"
+    },
+    {
+      "file": "14_cropped.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "reject"
+    },
+    {
+      "file": "15_glare_single_bubble.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "read",
+      "requiredFlags": [
+        2
+      ]
+    },
+    {
+      "file": "16_jpeg_compressed.png",
+      "answers": "-BCBB-CCCA-AAAA-DDCC-CABD-CDDD-DDCD-BCCB-ABAD-BDBA-ABAB-CBCA-ADAA-BAAD-DBBD-AADA-BBBD-ADDB-CADC-AABB",
+      "expect": "read"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+const root=new URL('../',import.meta.url);
+const read=name=>fs.readFileSync(new URL('dist/'+name,root),'utf8');
+let html=read('index.html').replace('<link rel="stylesheet" href="style.css">',()=>'<style>'+read('style.css')+'</style>');
+const code=['template-100.mjs','template-50.mjs','template-200.mjs','reader.mjs','validation.mjs','app.mjs'].map(name=>{let source=read(name).replace(/^import .*;\s*$/gm,'').replace(/^export \{.*\};\s*$/gm,'').replace(/\bexport /g,'');return name==='template-50.mjs'?'const template50=(()=>{'+source+';return template50;})();':name==='template-200.mjs'?'const template200=(()=>{'+source+';return template200;})();':source;}).join('\n');
+new vm.Script(code);
+html=html.replace('<script type="module" src="app.mjs"></script>',()=>'<script type="module">\n'+code+'\n</script>');
+html=html.replace('href="favicon.svg"',()=>`href="data:image/svg+xml,${encodeURIComponent(read('favicon.svg'))}"`).replace(/\s*<link rel="icon" type="image\/png"[^>]+>/,'');
+fs.mkdirSync(new URL('artifacts/',root),{recursive:true});
+fs.writeFileSync(new URL('artifacts/Open_Faculty_Pilot.html',root),html);
+console.log('Built artifacts/Open_Faculty_Pilot.html from dist sources');

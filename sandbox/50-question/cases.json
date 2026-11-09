@@ -1,0 +1,100 @@
+{
+  "key": "BCDBDBBBBACBADCCDBBADBBAACDCADADDDCCCCBDADDCACCDBC",
+  "cases": [
+    {
+      "file": "01_clean_reconstructed.png",
+      "answers": "--------------------------------------------------",
+      "expect": "read",
+      "requiredFlags": []
+    },
+    {
+      "file": "02_half_answered.png",
+      "answers": "B-A-D-C-B-D-A-D-D-C-D-C-A-A-A-B-D-D-C-C-A-A-A-D-B-",
+      "expect": "read",
+      "requiredFlags": []
+    },
+    {
+      "file": "03_fully_correct.png",
+      "answers": "BCDBDBBBBACBADCCDBBADBBAACDCADADDDCCCCBDADDCACCDBC",
+      "expect": "read",
+      "requiredFlags": []
+    },
+    {
+      "file": "04_fully_wrong.png",
+      "answers": "CDACACCCCBDCBADDACCBACCBBDADBABAAADDDDCABAADBDDACD",
+      "expect": "read",
+      "requiredFlags": []
+    },
+    {
+      "file": "05_mixed.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "read",
+      "requiredFlags": []
+    },
+    {
+      "file": "06_tilted.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "read",
+      "requiredFlags": []
+    },
+    {
+      "file": "07_compressed.png",
+      "answers": "B-A-D-C-B-D-A-D-D-C-D-C-A-A-A-B-D-D-C-C-A-A-A-D-B-",
+      "expect": "read",
+      "requiredFlags": []
+    },
+    {
+      "file": "08_double_and_faint.png",
+      "answers": "XCDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "read",
+      "requiredFlags": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "09_glare_block.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "reject",
+      "requiredFlags": []
+    },
+    {
+      "file": "10_glare_single.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "read",
+      "requiredFlags": [
+        2
+      ]
+    },
+    {
+      "file": "11_cropped.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "reject",
+      "requiredFlags": []
+    },
+    {
+      "file": "12_heavy_blur.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "reject",
+      "requiredFlags": []
+    },
+    {
+      "file": "13_dim.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "reject",
+      "requiredFlags": []
+    },
+    {
+      "file": "14_sideways.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "reject",
+      "requiredFlags": []
+    },
+    {
+      "file": "15_wrong_layout.png",
+      "answers": "-CDBA-BBCA-BBDC-ABBA-BBAB-DCBD-DADC-DCBD-DDCB-CDCC",
+      "expect": "reject",
+      "requiredFlags": []
+    }
+  ]
+}

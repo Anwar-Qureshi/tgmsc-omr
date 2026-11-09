@@ -1,0 +1,12 @@
+Release delivery status — 7 November 2026
+
+Version 0.4.0 deployed successfully to the existing owner-private Sites URL:
+https://tgmsc-omr-faculty-pilot.fearlessanchor.chatgpt.site
+Source commit: 629278e7e629c73680e55c68df94345c9ceb4f3a
+
+11 unit tests and 31 controlled photo cases passed. See docs/TEST_REPORT.md for counts and limitations.
+Favicon assets and references are included in the deployment archive. Live favicon retrieval was blocked by the private host returning HTTP 401, so live browser favicon loading remains unverified. Owner sign-in and a hard refresh are needed to complete this check.
+
+Physical Android camera, low-memory endurance and independent real-paper accuracy remain pending. 30-question automatic reading remains unavailable; manual entry is supported. No zero-bug or guaranteed accuracy claim is made.
+
+Start with README.md. Future IDE agents should read AGENTS.md and docs/APP_GUIDE.md. Deploy only dist. Optional standalone HTML is in artifacts. No environment variables, paid inference, model files or database are required.

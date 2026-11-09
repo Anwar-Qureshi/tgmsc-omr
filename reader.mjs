@@ -1,5 +1,6 @@
 import {grid} from './template-100.mjs';
 import {template50} from './template-50.mjs';
+import {template200} from './template-200.mjs';
 export {grid};
 export const anchors = [[154,167],[978,150],[1072,1288],[145,1341]];
 export function projection(from,to){
@@ -21,7 +22,7 @@ export function projection(from,to){
 }
 const directions=Array.from({length:8},(_,i)=>[Math.cos(i*Math.PI/4),Math.sin(i*Math.PI/4)]);
 
-const templates={100:{anchors,grid},50:template50};
+const templates={100:{anchors,grid},50:template50,200:template200};
 export function readSheet(frame,points,questions=100){
  const template=templates[questions];
  if(!template) throw Error('This form requires manual entry.');
@@ -40,17 +41,19 @@ export function readSheet(frame,points,questions=100){
     const at=r=>gray(map([x+r*u,y+r*v]));
     return Math.max(0,at(questions===50?13:11)-Math.min(at(6),at(7),at(8),at(9),...(questions===50?[at(10),at(11)]:[])));
    }).sort((a,b)=>a-b);
-   return edges[3];
+   return edges[questions===200?4:3];
   });
   const strengths=bubbles.map(([x,y])=>{
    const bg=[[-9,-9],[9,-9],[-9,9],[9,9]].map(([i,j])=>gray(map([x+i,y+j]))).sort((a,b)=>a-b)[2];
    const center=[[0,0],[3,0],[-3,0],[0,3],[0,-3]].map(([i,j])=>gray(map([x+i,y+j])));
    return center.reduce((s,p)=>s+Math.max(0,bg-p),0)/center.length;
   });
-  const order=[0,1,2,3].sort((a,b)=>strengths[b]-strengths[a]);
+  const order=bubbles.map((_,i)=>i).sort((a,b)=>strengths[b]-strengths[a]);
   const [first,second]=order.map(i=>strengths[i]);
   const visible=outline.filter(value=>value>=5).length;
-  const answer=visible<4?'?':first<26?'-':first>=63&&second<32&&first-second>=38?'ABCD'[order[0]]:'?';
+  const optionLetters='ABCDE'.slice(0,bubbles.length);
+  const minOutlines=questions===200?3:bubbles.length;
+  const answer=visible<minOutlines?'?':first<26?'-':first>=63&&second<32&&first-second>=38?optionLetters[order[0]]:'?';
   return {answer,points:bubbles.map(map),visible};
  });
  // Four squares can appear on another page. Require printed rows throughout
@@ -65,8 +68,8 @@ export function readSheet(frame,points,questions=100){
  return rows.map(({answer,points})=>({answer,points}));
 }
 export function score(key,answers,correctPoints,penalty){
- if(typeof key!=='string'||!key.length||!/^[ABCD]+$/.test(key)||!Array.isArray(answers)||!Number.isFinite(correctPoints)||correctPoints<=0||!Number.isFinite(penalty)||penalty<0) return null;
- if(key.length!==answers.length || answers.some(a=>!['A','B','C','D','-','X'].includes(a))) return null;
+ if(typeof key!=='string'||!key.length||!/^[ABCDE]+$/.test(key)||!Array.isArray(answers)||!Number.isFinite(correctPoints)||correctPoints<=0||!Number.isFinite(penalty)||penalty<0) return null;
+ if(key.length!==answers.length || answers.some(a=>!['A','B','C','D','E','-','X'].includes(a))) return null;
  const correct=answers.filter((a,i)=>a===key[i]).length;
  const unanswered=answers.filter(a=>a==='-').length;
  const attempted=answers.length-unanswered;
@@ -104,6 +107,51 @@ export function findAnchors({data,width,height},questions=100){
   if(Math.min(w,h)>=(questions===50?2:minSide)&&Math.max(w,h)<=maxSide&&ratio>=(questions===50?.14:.60)&&density>=(questions===50?.60:.67)){
    candidates.push({point:[sx/end,sy/end],size:Math.sqrt(w*h),density,ratio});
   }
+ }
+ if(questions===200){
+  const bls=candidates.filter(c=>c.point[0]<width*.35&&c.point[1]>height*.70);
+  const brs=candidates.filter(c=>c.point[0]>width*.65&&c.point[1]>height*.70);
+  const pairs=[];
+  for(const bl of bls)for(const br of brs){
+   const dx=br.point[0]-bl.point[0], dy=br.point[1]-bl.point[1], dist=Math.hypot(dx,dy);
+   if(dist<width*.70||Math.abs(dy/dx)>.35) continue;
+   const sizeRatio=Math.min(bl.size,br.size)/Math.max(bl.size,br.size);
+   if(sizeRatio<.35) continue;
+   const score=dist/width+((bl.point[1]+br.point[1])/(2*height))*.6+sizeRatio*.2;
+   pairs.push({bl:bl.point,br:br.point,dist,score});
+  }
+  pairs.sort((a,b)=>b.score-a.score);
+  let bestResult=null;
+  for(const {bl,br,dist:L} of pairs.slice(0,3)){
+   const dx=br[0]-bl[0], dy=br[1]-bl[1], ux=dx/L, uy=dy/L, nx=uy, ny=-ux;
+   const cx_b=(bl[0]+br[0])/2, cy_b=(bl[1]+br[1])/2;
+   for(const hRatio of [1.135, 1.160, 1.220, 1.112, 1.185]){
+    const H=hRatio*L;
+    for(const s of [.985, .960, 1.000]){
+     const hw=(s*L)/2;
+     for(const shear of [0, 1.0]){
+      const cur_nx=nx*shear;
+      const cx_t=cx_b+H*cur_nx, cy_t=cy_b+H*ny;
+      for(const shiftFrac of [0, .015]){
+       const shiftX=shiftFrac*L;
+       const tl=[cx_t-hw*ux+shiftX,cy_t-hw*uy], tr=[cx_t+hw*ux+shiftX,cy_t+hw*uy];
+       const points=[tl,tr,br,bl];
+       if(!validAnchorGeometry(points,width,height)) continue;
+       try{
+        const rows=readSheet({data,width,height},points,200);
+        const answered=rows.filter(r=>r.answer!=='-'&&r.answer!=='?').length;
+        const flagged=rows.filter(r=>r.answer==='?').length;
+        const quality=answered*3-flagged;
+        if(!bestResult||quality>bestResult.quality){
+         bestResult={points,quality};
+        }
+       }catch{}
+      }
+     }
+    }
+   }
+  }
+  return bestResult?bestResult.points:null;
  }
  const picks=template.anchors.map(([x,y],i)=>{
   const left=i===0||i===3, top=i<2;

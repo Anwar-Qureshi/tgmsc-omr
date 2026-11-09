@@ -1,0 +1,17 @@
+File,Expected action,Attempted,Correct,Wrong,Blank,Deducted,Confirmed score,Flags in benchmark,Retake reason
+01_blank.png,Review and confirm,0,0,0,100,0.00,0.00,78 79 80 89 90 96 97 98 99 100,
+02_half_answered.png,Review and confirm,50,25,25,50,16.67,33.33,78 80 90 96 97 98 99 100,
+03_fully_correct.png,Review and confirm,100,100,0,0,0.00,200.00,78 79 80 90 97 98 99 100,
+04_fully_wrong.png,Review and confirm,100,0,100,0,66.67,-66.67,78 80 89 90 96 97 98 99 100,
+05_mixed.png,Review and confirm,80,60,20,20,13.33,106.67,78 79 80 89 90 96 97 98 99 100,
+06_tilted.png,Review and confirm,80,60,20,20,13.33,106.67,79 80 97 98 99 100,
+07_mild_blur.png,Review and confirm,50,25,25,50,16.67,33.33,78 79 80 89 90 96 97 98 99 100,
+08_double_and_faint.png,Review and confirm,81,60,21,19,14.00,106.00,1 6 78 79 80 89 90 96 97 98 99 100,
+09_glare.png,Retake,,,,,,,,"Questions 1–5 are not readable. Retake the photo without glare, shadows or folds."
+10_severe_blur.png,Retake,,,,,,,,Corner marks not reliably detected
+11_dim.png,Retake,,,,,,,,Corner marks not reliably detected
+12_sideways.png,Retake,,,,,,,,Corner marks not reliably detected
+13_wrong_form.png,Retake,,,,,,,,The answer grid does not match this form or is too faint. Retake the full 100-question sheet in even light.
+14_cropped.png,Retake,,,,,,,,The answer grid does not match this form or is too faint. Retake the full 100-question sheet in even light.
+15_glare_single_bubble.png,Review and confirm,80,60,20,20,13.33,106.67,2 78 79 80 89 90 96 97 98 99 100,
+16_jpeg_compressed.png,Review and confirm,80,60,20,20,13.33,106.67,79 80 89 90 97 98 99 100,

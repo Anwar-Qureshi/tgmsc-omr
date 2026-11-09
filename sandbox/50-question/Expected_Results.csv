@@ -1,0 +1,16 @@
+File,Expected action,Attempted,Correct,Wrong,Blank,Deducted,Confirmed score,Review questions
+01_clean_reconstructed.png,Review and confirm,0,0,0,50,0.00,0.00,
+02_half_answered.png,Review and confirm,25,13,12,25,4.00,9.00,
+03_fully_correct.png,Review and confirm,50,50,0,0,0.00,50.00,
+04_fully_wrong.png,Review and confirm,50,0,50,0,16.67,-16.67,
+05_mixed.png,Review and confirm,40,30,10,10,3.33,26.67,
+06_tilted.png,Review and confirm,40,30,10,10,3.33,26.67,
+07_compressed.png,Review and confirm,25,13,12,25,4.00,9.00,
+08_double_and_faint.png,Review and confirm,41,30,11,9,3.67,26.33,1 6
+09_glare_block.png,Retake,,,,,,,
+10_glare_single.png,Review and confirm,40,30,10,10,3.33,26.67,2
+11_cropped.png,Retake,,,,,,,
+12_heavy_blur.png,Retake,,,,,,,
+13_dim.png,Retake,,,,,,,
+14_sideways.png,Retake,,,,,,,
+15_wrong_layout.png,Retake,,,,,,,

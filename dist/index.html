@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TGMSC OMR Evaluator</title>
+  <meta name="description" content="Review and score TGMSC mock-test OMR sheets on your device.">
+  <meta name="theme-color" content="#174f42">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <span class="wordmark">TGMSC</span>
+      <span class="masthead-label">Faculty tools</span>
+      <span class="pilot-label">Pilot</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-intro">
+      <h1>OMR Evaluator</h1>
+      <p>Grade mock-test answer sheets and verify each result.</p>
+    </div>
+
+    <section id="setup" class="panel" aria-labelledby="setupTitle">
+      <div class="panel-head">
+        <h2 id="setupTitle">Set up an exam</h2>
+        <p>Choose the form, set the marking rules, and confirm the answer key.</p>
+      </div>
+      <form id="exam" class="panel-body">
+        <div class="fields">
+          <label>Exam name<input id="title" required maxlength="100" placeholder="e.g. Prelims mock · November"></label>
+          <label>Form
+            <select id="layout">
+              <option value="100">100 questions · TGMSC photo pilot</option>
+              <option value="50">50 questions · Reconstructed form pilot</option>
+              <option value="200">200 questions · TGMSC 5-option grand test</option>
+              <option value="30">30 questions · Manual entry only</option>
+            </select>
+          </label>
+          <label>Marks per correct answer<input id="plus" required inputmode="decimal" placeholder="e.g. 2"></label>
+          <label>Deduction per wrong answer<input id="minus" required inputmode="text" placeholder="e.g. 2/3"></label>
+        </div>
+        <p class="hint setup-note">Choose the number of questions, not the total marks. Enter the marking rules for this particular exam; the form does not determine the deduction.</p>
+        <label>Answer key in question order
+          <textarea id="key" required rows="4" placeholder="A B C D …" aria-describedby="keyHint"></textarea>
+        </label>
+        <p id="keyHint" class="hint">Enter exactly 100 answers: A, B, C or D in question order. Spaces, commas and line breaks are allowed. Do not include question numbers. Image answer keys are not supported; type or paste the verified key.</p>
+        <p id="formHint" class="hint setup-note"></p>
+        <div class="action-line"><button>Preview answer key</button></div>
+      </form>
+      <div id="preview" class="panel-body divided" hidden>
+        <h3>Check the answer key</h3>
+        <p class="hint">Compare these entries with the exam’s answer key before grading.</p>
+        <div id="keygrid"></div>
+        <button id="start">Confirm key and start grading</button>
+      </div>
+    </section>
+
+    <section id="work" class="panel" hidden>
+      <div class="panel-head heading">
+        <div class="exam-heading"><h2 id="active"></h2><p id="rules" class="hint"></p></div>
+        <button class="secondary" id="newexam" type="button">Back to exam setup</button>
+      </div>
+      <div class="panel-body">
+        <h3>Add an answer sheet</h3>
+        <div class="pair capture-actions">
+          <label class="file phone-camera">Take photo<input id="camera" type="file" accept="image/*" capture="environment" aria-label="Take photo"></label>
+          <label class="file secondary">Upload photo<input id="gallery" type="file" accept="image/*" aria-label="Upload photo"></label>
+        </div>
+        <p class="hint desktop-photo-note">On a computer, upload an existing photo. To take a new photo, open the evaluator on your phone.</p>
+        <p class="hint">Keep the sheet flat and upright, with all four printed corner marks visible. Hold the phone nearly parallel to the paper, fill most of the photo with the sheet, and avoid blur, glare and shadows. Photograph it before adding correction marks.</p>
+        <p class="hint setup-note">The photo is read automatically for supported forms. If the camera does not open, take a photo in your phone’s Camera app and use Upload photo.</p>
+        <div id="photo" class="divided" hidden>
+          <p id="guide" class="hint" aria-live="polite"></p>
+          <canvas id="sheet" aria-label="Sheet photo and answer grid"></canvas>
+          <div class="pair sheet-actions">
+            <button id="manual" type="button" class="secondary">Align manually</button>
+            <button id="overlay" type="button" class="secondary" aria-pressed="true" hidden>Hide overlay</button>
+            <button id="reviewLink" type="button" hidden>Review answers</button>
+          </div>
+          <div class="pair" id="align">
+            <button class="secondary" id="undo">Undo corner</button><button id="read" disabled>Read bubbles</button>
+          </div>
+        </div>
+        <div id="review" class="divided" hidden tabindex="-1">
+          <h3>Review answers</h3>
+          <p id="pending" role="status"></p>
+          <p class="hint setup-note">Choose what the student marked, not the correct answer from the key. Use All questions to check every reading. A flagged response needs your decision; Blank means no answer. Use Invalid only if your exam rules treat that response as wrong.</p>
+          <div class="pair review-nav">
+            <button id="backPhoto" type="button" class="secondary">View sheet</button>
+            <button id="goConfirm" type="button" hidden>Go to confirmation</button>
+          </div>
+          <label class="filter-label">Show
+            <select id="filter">
+              <option value="pending">Needs review</option>
+              <option value="all">All questions</option>
+              <option value="wrong">Wrong</option>
+            </select>
+          </label>
+          <div id="rows"></div>
+          <div id="confirmArea" tabindex="-1">
+            <p id="provisional" aria-live="polite"></p>
+            <label class="check"><input type="checkbox" id="verified">I checked the readings against this sheet.</label>
+            <button id="finish" disabled>Confirm result</button>
+          </div>
+        </div>
+        <div id="result" class="divided" hidden>
+          <h3>Confirmed result</h3>
+          <p class="hint">Copy these figures onto the paper before choosing Next student. This app does not keep a student result history. Marks are displayed to two decimal places.</p>
+          <div id="totals"></div>
+          <div class="pair"><button id="editResult" type="button" class="secondary">Review again</button><button id="next" type="button">Next student</button></div>
+        </div>
+      </div>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+    <details class="help"><summary>Quick help &amp; privacy</summary>
+      <ol><li>Set up the exam and check the complete answer key.</li><li>Photograph one sheet. Check that the green circles match the printed bubbles.</li><li>If alignment is wrong, retake the photo. Manual alignment uses the four printed corner marks, not the answer bubbles.</li><li>Review readings, confirm the result, and copy it to the paper before moving on.</li></ol>
+      <p>The 100-question reader uses the supplied reference. The 50-question reader uses a reconstructed reference and needs real-paper validation. The 200-question reader supports the 5-option grand test form. The 30-question form requires manual response entry. Unusual angles, rotated pages and damaged sheets may require a new photo.</p>
+      <p>Photos are processed in this browser and are not uploaded by the evaluator. Closing or reloading the tab loses the current sheet and score. Only the exam name, answer key and marking rules are saved locally. Back to exam setup lets you change them.</p>
+      <button id="forget" class="secondary" type="button">Forget saved exam settings</button>
+    </details>
+    <noscript><p>This evaluator needs JavaScript enabled in your browser.</p></noscript>
+    <footer>Photos and scores stay in this tab. Only exam settings are saved on this device.</footer>
+  </main>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

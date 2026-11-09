@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+__pycache__/
+*.log
+coverage/
+artifacts/
+private-data/
+.sites-runtime/
+*.jpeg
+*.jpg
+*.png
+

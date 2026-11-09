@@ -1,4 +1,4 @@
-import {parsePoints} from './validation.mjs';
+import {parsePoints, validExam} from './validation.mjs';
 import {findAnchors, readSheet, score} from './reader.mjs';
 
 const $=id=>document.getElementById(id);
@@ -7,7 +7,7 @@ const storageKey='tgmsc-omr-pilot-v1';
 const canvas=$('sheet'), context=canvas.getContext('2d',{willReadFrequently:true});
 const marksFormat=new Intl.NumberFormat('en-IN',{maximumFractionDigits:2});
 const corners=['upper left','upper right','lower right','lower left'];
-const options=[['?','Needs checking'],['A','A'],['B','B'],['C','C'],['D','D'],['-','No answer'],['X','Invalid / count as wrong']];
+const getOptions=()=>exam&&exam.key.length===200?[['?','Needs review'],['A','A'],['B','B'],['C','C'],['D','D'],['E','E'],['-','Unanswered'],['X','Wrong / invalid']]:[['?','Needs review'],['A','A'],['B','B'],['C','C'],['D','D'],['-','Unanswered'],['X','Wrong / invalid']];
 let exam=null, draft=null, frame=null, points=[], readings=[], answers=[];
 let photoVersion=0, manual=false, overlay=true;
 
@@ -23,7 +23,7 @@ function begin(config){
  $('setup').hidden=true;
  $('work').hidden=false;
  $('active').textContent=config.title+' · '+config.key.length+' questions';
- $('rules').textContent='Correct +'+(config.plusText??config.plus)+' · Wrong / invalid −'+(config.minusText??config.minus)+' · No answer 0';
+ $('rules').textContent='Correct +'+(config.plusText??config.plus)+' · Wrong / invalid −'+(config.minusText??config.minus)+' · Blank 0';
  status('');
 }
 $('exam').addEventListener('input',()=>{$('preview').hidden=true;draft=null;});
@@ -33,7 +33,8 @@ $('exam').addEventListener('submit',event=>{
   const key=$('key').value.toUpperCase().replace(/[\s,]+/g,'');
   const title=$('title').value.trim();
   if(!title) throw Error('Enter an exam name.');
-  if(key.length!==Number($('layout').value)||!/^[ABCD]+$/.test(key)) throw Error('Enter exactly '+$('layout').value+' answers using A, B, C or D.');
+  const is200=$('layout').value==='200';
+  if(key.length!==Number($('layout').value)||!(is200?/^[ABCDE]+$/:/^[ABCD]+$/).test(key)) throw Error('Enter exactly '+$('layout').value+' answers using A, B, C'+(is200?', D or E.':' or D.'));
   const plus=parsePoints($('plus').value), minus=parsePoints($('minus').value);
   if(plus<=0) throw Error('Marks per correct answer must be positive.');
   draft={title,key,plus,minus,plusText:$('plus').value.trim(),minusText:$('minus').value.trim()};
@@ -45,7 +46,7 @@ $('exam').addEventListener('submit',event=>{
 $('start').onclick=()=>{
  if(!draft) return;
  begin(draft);
-
+ try{localStorage.setItem(storageKey,JSON.stringify(draft));}catch{status('Exam settings could not be saved to this browser.');}
 };
 function clearSheet(){
  photoVersion++;
@@ -59,8 +60,8 @@ function clearSheet(){
  $('overlay').hidden=true;
  status('');
 }
-$('editexam').onclick=()=>{
- if(frame&&!confirm('Edit the exam settings and answer key? The current student’s photo and result will be cleared.')) return;
+$('newexam').onclick=()=>{
+ if(frame&&!confirm('Return to exam setup? The current sheet and result will be cleared.')) return;
  const config=exam;
  clearSheet();draft=null;
  $('work').hidden=true;$('setup').hidden=false;$('preview').hidden=true;
@@ -88,11 +89,11 @@ function draw(){
  $('reviewLink').hidden=!answers.length;
  $('overlay').hidden=!readings.length;
  $('overlay').setAttribute('aria-pressed',String(overlay));
- $('overlay').textContent=overlay?'Hide green circles':'Show green circles';
- $('guide').textContent=exam.key.length===30?'This sheet needs manual entry. Read each student answer from the photo and select it below.'
-  :readings.length?'Check that every green circle is inside its printed answer bubble. If they do not line up, retake the photo or choose Set corner marks. Then check the answers below.'
-  :!manual?'The four printed corner marks could not be found. Retake the whole sheet in even light, or choose Set corner marks.'
-  :i===4?'All four marks are selected. Choose Read answers.'
+ $('overlay').textContent=overlay?'Hide overlay':'Show overlay';
+ $('guide').textContent=exam.key.length===30?'Read each answer from the photo and enter it below.'
+  :readings.length?'Check that the green circles sit inside the printed bubbles, then review the answers.'
+  :!manual?'The four printed corner marks could not be found reliably. Retake the full sheet in even light, or align it manually.'
+  :i===4?'Select Read bubbles to continue.'
   :'Tap the small printed black mark near the '+corners[i]+' of the form ('+(i+1)+'/4). These marks sit outside the answer grid.';
 }
 async function loadPhoto(input){
@@ -101,7 +102,7 @@ async function loadPhoto(input){
  if(file.size>25*1024*1024){status('This photo is larger than 25 MB. Use a smaller JPEG or PNG.');return;}
  if(frame&&$('result').hidden&&answers.length&&!confirm('Replace the current student sheet and its review?')) return;
  clearSheet();
- status('Reading the photo. Please wait…');
+ status('Reading photo…');
  const version=photoVersion;
  const url=URL.createObjectURL(file);
  try{
@@ -139,7 +140,7 @@ $('undo').onclick=()=>{
  $('review').hidden=true;$('result').hidden=true;status('');draw();
 };
 $('manual').onclick=()=>{
- if(answers.length&&!confirm('Selecting corner marks again will clear the answers you have checked for this sheet. Continue?')) return;
+ if(answers.length&&!confirm('Realigning will reset the answers for this sheet. Continue?')) return;
  manual=true;overlay=true;points=[];readings=[];answers=[];
  $('review').hidden=true;$('result').hidden=true;status('');draw();
  $('guide').scrollIntoView({block:'nearest'});
@@ -186,9 +187,9 @@ function renderRows(){
  const rows=answers.map((answer,index)=>{
   const key=exam.key[index];
   if(filter==='pending'&&answer!=='?') return null;
-  if(filter==='wrong'&&!('ABCDX'.includes(answer)&&answer!==key)) return null;
+  if(filter==='wrong'&&!('ABCDEX'.includes(answer)&&answer!==key)) return null;
   const row=document.createElement('div');row.className='row';row.setAttribute('data-question',String(index));
-  const text=tile('Q'+(index+1)+' · '+(answer==='?'?'Needs checking':answer==='-'?'No answer':answer===key?'Correct':'Wrong')+(answer==='?'?'':' · Key '+key));
+  const text=tile('Q'+(index+1)+' · '+(answer==='?'?'Unresolved':answer==='-'?'Unanswered':answer===key?'Correct':'Wrong')+(answer==='?'?'':' · Key '+key));
   const change=value=>{
    answers[index]=value;
    $('verified').checked=false;
@@ -206,9 +207,9 @@ function renderRows(){
   if(filter==='pending'&&bubbles){
    row.classList.add('quick-review');
    const choices=document.createElement('div');choices.className='answer-buttons';
-   for(const [value,label] of options.slice(1)){
+   for(const [value,label] of getOptions().slice(1)){
     const button=document.createElement('button');button.type='button';
-    button.className='secondary';button.textContent=value==='-'?'No answer':value==='X'?'Count as wrong':label;
+    button.className='secondary';button.textContent=value==='-'?'Blank':value==='X'?'Invalid':label;
     button.setAttribute('aria-label','Question '+(index+1)+': '+label);
     button.onclick=()=>change(value);choices.append(button);
    }
@@ -216,7 +217,7 @@ function renderRows(){
    return row;
   }
   const select=document.createElement('select');select.setAttribute('aria-label','Question '+(index+1)+' response');
-  for(const [value,label] of options) select.add(new Option(label,value,value===answer,value===answer));
+  for(const [value,label] of getOptions()) select.add(new Option(label,value,value===answer,value===answer));
   select.onchange=()=>change(select.value);
   row.append(text,select);
   if(bubbles){
@@ -231,9 +232,9 @@ function renderRows(){
 }
 function updateReview(){
  const count=answers.filter(a=>a==='?').length;
- $('pending').textContent=count?count+' answer'+(count===1?' needs':'s need')+' checking.':'No answers are waiting for a decision. Choose All questions and check the answers against the sheet before confirming.';
+ $('pending').textContent=count?count+' response'+(count===1?'':'s')+' need review.':'All responses have a value. Check the sheet before confirming.';
  const result=score(exam.key,answers,exam.plus,exam.minus);
- $('provisional').textContent=result?'Score before confirmation: '+marksFormat.format(result.total)+' · '+result.correct+' correct · '+result.wrong+' wrong · '+result.unanswered+' unanswered':'Check the remaining uncertain answers to see the score.';
+ $('provisional').textContent=result?'Provisional score: '+marksFormat.format(result.total)+' · '+result.correct+' correct · '+result.wrong+' wrong · '+result.unanswered+' blank':'Resolve all flagged answers to see the provisional score.';
  $('confirmArea').hidden=count!==0;
  $('goConfirm').hidden=count!==0;
  $('finish').disabled=count!==0||!$('verified').checked;
@@ -246,36 +247,29 @@ $('editResult').onclick=()=>{
 $('finish').onclick=()=>{
  const result=score(exam.key,answers,exam.plus,exam.minus);
  if(!result||!$('verified').checked) return;
- const fields=[['Attempted',result.attempted],['Correct',result.correct],['Wrong',result.wrong],['Unanswered',result.unanswered],['Marks deducted',result.negative],['Final score',result.total]];
+ const fields=[['Attempted',result.attempted],['Correct',result.correct],['Wrong',result.wrong],['Unanswered',result.unanswered],['Deducted',result.negative],['Final score',result.total]];
  $('totals').replaceChildren(...fields.map(([name,value])=>tile(name+': '+marksFormat.format(value))));
  $('review').hidden=true;
  for(const id of ['align','manual','reviewLink','overlay']) $(id).hidden=true;
  $('result').hidden=false;
  $('result').scrollIntoView({block:'nearest'});
 };
-function freshSetup(){
- clearSheet();exam=null;draft=null;
- $('exam').reset();
- // Explicitly clear values as browsers may restore fields on navigation.
- for(const id of ['title','plus','minus','key']) $(id).value='';
- $('layout').value='100';
- $('work').hidden=true;$('setup').hidden=false;$('preview').hidden=true;
- $('keygrid').replaceChildren();$('active').textContent='';$('rules').textContent='';
- updateFormHelp();
-}
-$('newexam').onclick=()=>{
- if(!confirm('Start a new exam? The current exam, answer key, sheet and result will be cleared.')) return;
- freshSetup();$('title').focus();
-};
-// Remove legacy saved settings; exams now live only in this open tab.
-try{localStorage.removeItem(storageKey);}catch{}
-// Also start clean when the browser restores this page from its back/forward cache.
-window.addEventListener('pageshow',event=>{if(event.persisted) freshSetup();});
+try{
+ const saved=JSON.parse(localStorage.getItem(storageKey));
+ if(validExam(saved)) { for(const [textKey,valueKey] of [['plusText','plus'],['minusText','minus']]) {
+   try { if(typeof saved[textKey]!=='string'||parsePoints(saved[textKey])!==saved[valueKey]) delete saved[textKey]; }
+   catch { delete saved[textKey]; }
+  } begin(saved); }
+}catch{}
 
 function updateFormHelp(){
  const count=$('layout').value;
- $('keyHint').textContent='Type or paste exactly '+count+' answers using A, B, C or D. Separate them with spaces, commas or new lines. Leave out question numbers. Answer-key photos cannot be read.';
- $('formHint').textContent=count==='30'?'30 questions: you will enter each student answer yourself after adding the photo. The app will calculate the score.':count==='50'?'50 questions: this trial reader uses a layout recreated from a marked sheet. Check the green circles and every answer carefully.':'100 questions: photo reading supports the supplied TGMSC sheet layout. Check the green circles and every answer before confirming.';
+ $('keyHint').textContent='Enter exactly '+count+' answers: '+(count==='200'?'A, B, C, D or E':'A, B, C or D')+' in question order. Spaces, commas and line breaks are allowed. Do not include question numbers. Image answer keys are not supported; type or paste the verified key.';
+ $('formHint').textContent=count==='30'?'30-question sheets: enter each student response manually from the photo. Automatic reading is not available yet.':count==='50'?'50-question photo reading uses a reconstructed reference. Check the overlay and all readings carefully during the pilot.':count==='200'?'200-question photo reading supports the TGMSC 5-option grand test layout.':'100-question photo reading supports the supplied TGMSC layout. Other layouts may not match.';
 }
 $('layout').addEventListener('change',updateFormHelp);
-freshSetup();
+$('forget').onclick=()=>{
+ try{localStorage.removeItem(storageKey);status('Saved exam settings removed. The current exam stays open until you leave this tab.');}
+ catch{status('Browser storage is unavailable. You can clear site data in your browser settings.');}
+};
+updateFormHelp();
